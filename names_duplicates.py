@@ -3,16 +3,24 @@ import numpy as np
 from metaphone import doublemetaphone
 
 class FullName:
-  def __init__(self, first_name, surname, second_name=None):
+  def __init__(self, first_name, middle_name, surname, second_surname):
     self.first_name = first_name
+    self.middle_name = middle_name
     self.surname = surname
-    self.second_name = second_name
+    self.second_surname = second_surname
+    
 
   def print_name(self):
     print("first_name: %s, surname: %s" %(self.first_name, self.surname))
 
   def to_str(self):
     return ("%s %s" %(self.first_name, self.surname))
+
+  # def to_str(self):
+  #   full_name_string = ''
+  #   for var in [self.first_name, self.middle_name, self.surname, self.second_surname]:
+  #     if var:
+  #       full_name_string = full_name_string + var + " "
 
   def matches_name_with_doublemetaphone(self, fullname):
     #Phonetic match using double metaphone 
@@ -28,14 +36,13 @@ def create_list_names(df, columns):
 
   names_list = []
 
-  first_name_column, second_name_column, last_name_column = columns
+  first_name_column, middle_name_column, last_name_column, second_last_name_column, sex_column = columns
   
-  for index, row in df.iterrows():
-    if pd.notnull(row[second_name_column]):
-      full_name = FullName(row[first_name_column], row[last_name_column], row[second_name_column])
-    else:
-      full_name = FullName(row[first_name_column], row[last_name_column])
+  df_with_names = df[df[first_name_column]!='']
 
+  for index, row in df_with_names.iterrows():
+    full_name = FullName(row[first_name_column], row[middle_name_column], row[last_name_column], row[second_last_name_column])
+  
     names_list.append(full_name)
 
   return names_list
@@ -51,7 +58,7 @@ def search_names_intersection(dataset_path, source_columns, columns_to_check_lis
   Check which names in columns_to_check already exist in source_columns
   '''
   #Load dataset
-  df = pd.read_csv(dataset_path)
+  df = pd.read_stata(dataset_path)
 
   #Create list of names in source_columns
   existing_names = create_list_names(df, source_columns)
@@ -80,7 +87,7 @@ def search_names_intersection(dataset_path, source_columns, columns_to_check_lis
 
     #If we got here, there was no match with any of existing names in database
     if not found_match:
-      matches_results.append([name_to_check.to_str(), 'No'])
+      matches_results.append([name_to_check.to_str(), 'No', np.nan])
 
 
   #Create an output database of matches_results
