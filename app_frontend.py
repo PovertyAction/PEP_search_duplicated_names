@@ -3,13 +3,11 @@ import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askopenfilename, asksaveasfile
-from PIL import ImageTk, Image
-import webbrowser
 import os
 import names_duplicates
 
 intro_text = "This app checks duplicates names in a given dataset."
-app_title = "Findind names duplicates - v0.1"
+app_title = "Findind names duplicates - v0.2"
 
 #Dataset we are working with
 matches_df = None

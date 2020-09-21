@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from metaphone import doublemetaphone
-from pyjarowinkler import distance
 
 class FullName:
   def __init__(self, first_name=None, middle_name=None, surname=None, second_surname=None, fullname=None, case_id = None, surveyed_or_hm = None, case_id_who_reffered=None, submissiondate=None):
@@ -31,17 +30,17 @@ class FullName:
         str_name += " "+ self.second_surname
       return str_name.lower()
 
-  def get_doublemetaphone_list(self):
+  def get_doublemetaphone_list(self, include_middle_name_and_second_surname=True):
     if self.fullname:
       doublemetaphone_list = [doublemetaphone(name_part) for name_part in self.fullname.split(" ")]
     else:
       doublemetaphone_list = []
       doublemetaphone_list.append(doublemetaphone(self.first_name))
-      if(self.middle_name):
+      if(include_middle_name_and_second_surname and self.middle_name):
         doublemetaphone_list.append(doublemetaphone(self.middle_name))
       if(self.surname):
         doublemetaphone_list.append(doublemetaphone(self.surname))
-      if(self.second_surname):
+      if(include_middle_name_and_second_surname and self.second_surname):
         doublemetaphone_list.append(doublemetaphone(self.second_surname))
 
     return doublemetaphone_list
@@ -93,7 +92,7 @@ def create_list_names_based_on_one_column(df, fullname_column):
     else:
       surveyed_or_hm = 'Miembra de hogar'
 
-    full_name = FullName(fullname= row[fullname_column], case_id = row['caseid'], surveyed_or_hm = surveyed_or_hm)
+    full_name = FullName(fullname= row[fullname_column], case_id = row['caseid'], surveyed_or_hm = surveyed_or_hm, submissiondate=row['submissiondate'])
   
     names_list.append(full_name)
 
@@ -194,19 +193,19 @@ def search_names_intersection(dataset_path):
     for existing_name in existing_names:
       if(name_to_check.matches_with_doublemetaphone(existing_name)):
         # print("%s is already in database" % name_to_check.to_str())
-        matches_results.append([name_to_check.to_str(), name_to_check.case_id_who_reffered, name_to_check.submissiondate,'Si', existing_name.to_str(), existing_name.surveyed_or_hm, existing_name.case_id])
+        matches_results.append([name_to_check.to_str(), name_to_check.get_doublemetaphone_list(include_middle_name_and_second_surname=False),name_to_check.case_id_who_reffered, name_to_check.submissiondate,'Si', existing_name.to_str(), existing_name.get_doublemetaphone_list(include_middle_name_and_second_surname=False), existing_name.surveyed_or_hm, existing_name.case_id, existing_name.submissiondate, name_to_check.submissiondate < existing_name.submissiondate])
         found_match = True
         break #Do not keep looking in other existing names
 
     #If we got here, there was no match with any of existing names in database
     if not found_match:
-      matches_results.append([name_to_check.to_str(), name_to_check.case_id_who_reffered, name_to_check.submissiondate,'No', np.nan, np.nan, np.nan])
+      matches_results.append([name_to_check.to_str(), name_to_check.get_doublemetaphone_list(include_middle_name_and_second_surname=False), name_to_check.case_id_who_reffered, name_to_check.submissiondate,'No',  np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
 
   #SAVE OUTPUT
   #Create an output database of matches_results
   matches_df = pd.DataFrame()
   matches_df = matches_df.append(matches_results)
-  matches_df.columns=['Persona referida', 'Case id de persona que refirió', 'Fecha encuesta', 'Existe en DB', 'Nombre match', 'Match fue encuestada o miembro/a de hogar', 'Match caseid']
+  matches_df.columns=['Nombre Referido', 'Metaphone Referido', 'Referido en case id', 'Fecha referido:', 'Match?', 'Nombre Match', 'Methaphone_match','Match encuestada o hh memb.', 'Match caseid', 'Submissiondate match', 'Match posterior a referral?']
   
   # matches_df.to_csv('duplicates.csv', index=False)
   print(matches_df)
@@ -230,13 +229,7 @@ def save_df_to_excel(saving_path, matches_df):
       'align': 'justify'})
 
   # Set the column width and format.
-  worksheet.set_column('A:A', 16)#, header_format)
-  worksheet.set_column('B:B', 26)#, header_format)
-  worksheet.set_column('C:C', 18)#, header_format)
-  worksheet.set_column('D:D', 12)#, header_format)
-  worksheet.set_column('E:E', 18)#, header_format)
-  worksheet.set_column('F:F', 34)#, header_format)
-  worksheet.set_column('G:G', 12)#, header_format)
+  worksheet.set_column('A:K', 20)#, header_format)
 
   # Close the Pandas Excel writer and output the Excel file.
   writer.save()
@@ -246,9 +239,9 @@ def save_df_to_excel(saving_path, matches_df):
 if __name__== "__main__":
 
   #Load file
-  dataset_path = 'X:\\Box Sync\\CP_Projects\\IPA_COL_Projects\\3_Ongoing Projects\\IPA_COL_PEP\\07_Questionnaires&Data\\Baseline_Quant\\03_DataManagement\\02 Data backup and storage\\2. rawdata\\Survey\\stata databases\\encuesta_cuantitativa_bidpep - Copy.dta'
+  dataset_path = 'X:\\Box Sync\\CP_Projects\\IPA_COL_Projects\\3_Ongoing Projects\\IPA_COL_PEP\\07_Questionnaires&Data\\Baseline_Quant\\03_DataManagement\\02 Data backup and storage\\2. rawdata\\Survey\\stata databases\\encuesta_cuantitativa_bidpep.dta'
   
   #Find duplicates
   matches_df = search_names_intersection(dataset_path)
 
-  save_df_to_excel("./hola.xlsx", matches_df)
+  save_df_to_excel("./results.xlsx", matches_df)
