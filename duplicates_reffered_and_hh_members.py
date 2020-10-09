@@ -47,7 +47,7 @@ class FullName:
 
   def matches_with_doublemetaphone(self, existing_name):
     #Check if first name and last name metaphones exist in existing_name metaphone
-    
+
     existing_name_metaphones = existing_name.get_doublemetaphone_list()
 
     #If we have the name disaggregated by different names, check only first name and surname
@@ -82,10 +82,10 @@ class FullName:
 def create_list_names_based_on_one_column(df, fullname_column):
 
   names_list = []
-  
+
   #Remove columns with no fullname
   df = df[df[fullname_column]!='']
-  
+
   for index, row in df.iterrows():
     if(fullname_column == 'full_name'):
       surveyed_or_hm = 'Encuestada'
@@ -93,7 +93,7 @@ def create_list_names_based_on_one_column(df, fullname_column):
       surveyed_or_hm = 'Miembra de hogar'
 
     full_name = FullName(fullname= row[fullname_column], case_id = row['caseid'], surveyed_or_hm = surveyed_or_hm, submissiondate=row['submissiondate'])
-  
+
     names_list.append(full_name)
 
   return names_list
@@ -104,7 +104,7 @@ def create_list_names_based_on_many_columns(df, columns):
 
   #Get columns associated with each part of name
   fn_c, mn_c, ln_c, sln_c, sex_c = columns
-  
+
   #Filter out empty lists
   df_with_names = df[df[fn_c]!='']
 
@@ -114,7 +114,7 @@ def create_list_names_based_on_many_columns(df, columns):
     names_list.append(full_name)
 
   return names_list
- 
+
 def name_in_list(list_names, name):
   for name_in_list in list_names:
     if name.matches_with_doublemetaphone(name_in_list):
@@ -125,7 +125,7 @@ def get_existing_names_in_db(df, source_columns):
 
   all_names = []
   for source_column in source_columns:
-    
+
     names_to_add = create_list_names_based_on_one_column(df, source_column)
 
     #Add names to all_names if they dont exist
@@ -146,7 +146,8 @@ def get_names_to_check(df, columns_to_check_list):
         all_names_to_check.append(name)
   return all_names_to_check
 
-def search_names_intersection(dataset_path):
+
+def search_duplicates(dataset_path):
   '''
   Check which names in columns_to_check already exist in database
   '''
@@ -158,12 +159,13 @@ def search_names_intersection(dataset_path):
   #Filter df to only those with final_status=1 and collection_wave piloto2
   df = df[df['final_status']=='1']
   df = df[df['collection_wave']=='piloto2']
+  df.reset_index(inplace=True)
 
   #GET NAMES ALREADY EXISTING IN DATABASE
 
   #Select colums where we capture names already in database
   #We capture for sure from 'full_name' column.
-  #We also consider members of hh. 
+  #We also consider members of hh.
   max_n_hh_memb = int(df['hh_members'].max())
   source_columns = ['full_name']
   for i in range(1,max_n_hh_memb+1):
@@ -177,7 +179,7 @@ def search_names_intersection(dataset_path):
   #GET NAMES THAT WE WANT TO CHECK IF THEY ALREADY EXIST IN DATABASE
 
   #Select columns with names we would like to check if they already exist in database
-  columns_to_check_list = [['rds6_name1_1','rds6_name2_1','rds6_lastname1_1', 'rds6_lastname2_1', 'rds6_gender_1'],['rds6_name1_2','rds6_name2_2','rds6_lastname1_2', 'rds6_lastname2_2', 'rds6_gender_2'],['rds6_name1_3','rds6_name2_3','rds6_lastname1_3', 'rds6_lastname2_3', 'rds6_gender_3']]  
+  columns_to_check_list = [['rds6_name1_1','rds6_name2_1','rds6_lastname1_1', 'rds6_lastname2_1', 'rds6_gender_1'],['rds6_name1_2','rds6_name2_2','rds6_lastname1_2', 'rds6_lastname2_2', 'rds6_gender_2'],['rds6_name1_3','rds6_name2_3','rds6_lastname1_3', 'rds6_lastname2_3', 'rds6_gender_3']]
 
   #Create list of names in columns_to_check
   all_names_to_check = get_names_to_check(df, columns_to_check_list)
@@ -188,7 +190,7 @@ def search_names_intersection(dataset_path):
   matches_results = []
   for name_to_check in all_names_to_check:
     found_match = False
-    
+
     #Check if name_to_check matches with any of the existing_names
     for existing_name in existing_names:
       if(name_to_check.matches_with_doublemetaphone(existing_name)):
@@ -206,11 +208,13 @@ def search_names_intersection(dataset_path):
   matches_df = pd.DataFrame()
   matches_df = matches_df.append(matches_results)
   matches_df.columns=['Nombre Referido', 'Metaphone Referido', 'Referido en case id', 'Fecha referido:', 'Match?', 'Nombre Match', 'Methaphone_match','Match encuestada o hh memb.', 'Match caseid', 'Submissiondate match', 'Match posterior a referral?']
-  
+
   # matches_df.to_csv('duplicates.csv', index=False)
   print(matches_df)
+  results_path = "./Duplicados_referidos_y_hh_members.xlsx"
+  save_df_to_excel(results_path, matches_df)
 
-  return matches_df
+  return results_path
 
 def save_df_to_excel(saving_path, matches_df):
 
@@ -240,8 +244,6 @@ if __name__== "__main__":
 
   #Load file
   dataset_path = 'X:\\Box Sync\\CP_Projects\\IPA_COL_Projects\\3_Ongoing Projects\\IPA_COL_PEP\\07_Questionnaires&Data\\Baseline_Quant\\03_DataManagement\\02 Data backup and storage\\2. rawdata\\Survey\\stata databases\\encuesta_cuantitativa_bidpep.dta'
-  
-  #Find duplicates
-  matches_df = search_names_intersection(dataset_path)
 
-  save_df_to_excel("./results.xlsx", matches_df)
+  #Find duplicates
+  matches_df = search_duplicates(dataset_path)
