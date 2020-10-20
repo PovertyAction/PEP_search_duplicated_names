@@ -1,7 +1,9 @@
 import pandas as pd
 from metaphone import doublemetaphone
+import sys
+import os
 
-def search_duplicates(dataset_path):
+def search_duplicates(dataset_path, output_directory = '.'):
   '''
   Looks for duplicates between surveyed people and members of hh already interviewed
   '''
@@ -63,11 +65,13 @@ def search_duplicates(dataset_path):
       'CaseId encuestado':interviewed_people['caseid_interviewed'],
       'Match con miembro hogar':interviewed_people['duplicated_with_hh_member'],
       'CaseId miembro hogar':interviewed_people['caseid_hh_member']}, ignore_index=True)
-  results_df.to_csv("Encuestados_que_ya_figuraban_en_un_hogar.csv", index=False)
 
-  print(interviewed_people_already_hh_member)
-  print(results_df)
-  print("")
+  output_path = os.path.join(output_directory, "Encuestados_que_ya_figuraban_en_un_hogar.csv")
+  results_df.to_csv(output_path, index=False)
+
+  # print(interviewed_people_already_hh_member)
+  # print(results_df)
+  # print("")
 
   #Task 2: Detect if a person being named as a hh member was already interviewed
   hh_member_already_interviewed = {}
@@ -98,13 +102,39 @@ def search_duplicates(dataset_path):
         'CaseId miembro hogar':hh_member['caseid_hh_member'],
         'Match con entrevistado':hh_member['duplicated_with_interviewed'],
         'CaseId entrevistado':hh_member['caseid_interviewed']}, ignore_index=True)
-  results_df.to_csv("Miembros_hogar_ya_encuestados.csv", index=False)
 
-  print(hh_member_already_interviewed)
-  print(results_df)
+  output_path = os.path.join(output_directory, "Miembros_hogar_ya_encuestados.csv")
+  results_df.to_csv(output_path, index=False)
+
+  # print(hh_member_already_interviewed)
+  # print(results_df)
 
   return "'Encuestados_que_ya_figuraban_en_un_hogar.csv' and 'Miembros_hogar_ya_encuestados.csv'"
 
+
+def run_without_gui(args):
+    if len(sys.argv)==1:
+        print("No arguments given")
+        return
+
+    file_path = sys.argv[1]
+    if not os.path.isfile(file_path):
+        print("Input file does not exist")
+        return
+
+    #If no argument for output path is given, assume ouput_path is working directory
+    if len(sys.argv)==2:
+        print("Output files will be located in same directory as this .exe file")
+        output_path = '.'
+    else:
+        output_path = sys.argv[2]
+        if not os.path.isdir(output_path):
+            print("Output directory given does not exist")
+            return
+
+    output_path = "C:\\Users\\felip\\Desktop"
+    # file_path = "X:\PII\encuesta_cuantitativa_bidpep_cleaned_piloto2 - Copy.dta"
+    search_duplicates(file_path, output_path)
+
 if __name__ == '__main__':
-    file_path = "X:\PII\encuesta_cuantitativa_bidpep_cleaned_piloto2 - Copy.dta"
-    search_duplicates(file_path)
+    run_without_gui(sys.argv)

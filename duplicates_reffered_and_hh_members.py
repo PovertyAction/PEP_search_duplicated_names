@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from metaphone import doublemetaphone
+import os
+import sys
 
 class FullName:
   def __init__(self, first_name=None, middle_name=None, surname=None, second_surname=None, fullname=None, case_id = None, surveyed_or_hm = None, case_id_who_reffered=None, submissiondate=None):
@@ -147,7 +149,7 @@ def get_names_to_check(df, columns_to_check_list):
   return all_names_to_check
 
 
-def search_duplicates(dataset_path):
+def search_duplicates(dataset_path, output_path='.'):
   '''
   Check which names in columns_to_check already exist in database
   '''
@@ -210,8 +212,8 @@ def search_duplicates(dataset_path):
   matches_df.columns=['Nombre Referido', 'Metaphone Referido', 'Referido en case id', 'Fecha referido:', 'Match?', 'Nombre Match', 'Methaphone_match','Match encuestada o hh memb.', 'Match caseid', 'Submissiondate match', 'Match posterior a referral?']
 
   # matches_df.to_csv('duplicates.csv', index=False)
-  print(matches_df)
-  results_path = "./Duplicados_referidos_y_hh_members.xlsx"
+  # print(matches_df)
+  results_path = os.path.join(output_path, "Duplicados_referidos_y_hh_members.xlsx")
   save_df_to_excel(results_path, matches_df)
 
   return results_path
@@ -239,11 +241,34 @@ def save_df_to_excel(saving_path, matches_df):
   writer.save()
 
 
+def run_without_gui(args):
+    if len(sys.argv)==1:
+        print("No arguments given")
+        return
 
-if __name__== "__main__":
+    file_path = sys.argv[1]
+    if not os.path.isfile(file_path):
+        print(file_path)
+        print("Input file does not exist")
+        import time
+        time.sleep(2)
+        return
 
-  #Load file
-  dataset_path = 'X:\\Box Sync\\CP_Projects\\IPA_COL_Projects\\3_Ongoing Projects\\IPA_COL_PEP\\07_Questionnaires&Data\\Baseline_Quant\\03_DataManagement\\02 Data backup and storage\\2. rawdata\\Survey\\stata databases\\encuesta_cuantitativa_bidpep.dta'
+    #If no argument for output path is given, assume ouput_path is working directory
+    if len(sys.argv)==2:
+        print("Output files will be located in same directory as this .exe file")
+        output_path = '.'
+    else:
+        output_path = sys.argv[2]
+        if not os.path.isdir(output_path):
+            print("Output directory given does not exist")
+            import time
+            time.sleep(2)
+            return
 
-  #Find duplicates
-  matches_df = search_duplicates(dataset_path)
+    output_path = "C:\\Users\\felip\\Desktop"
+    # file_path = "X:\PII\encuesta_cuantitativa_bidpep_cleaned_piloto2 - Copy.dta"
+    search_duplicates(file_path, output_path)
+
+if __name__ == '__main__':
+    run_without_gui(sys.argv)
