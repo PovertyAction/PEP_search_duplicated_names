@@ -103,7 +103,7 @@ def create_list_names_based_on_one_column(df, fullname_column):
     else:
       surveyed_or_hm = 'Miembra de hogar'
 
-    full_name = FullName(fullname= row[fullname_column], case_id = row['caseid'], surveyed_or_hm = surveyed_or_hm, submissiondate=row['submissiondate'])
+    full_name = FullName(fullname= row[fullname_column], case_id = row['current_resp_key'], surveyed_or_hm = surveyed_or_hm, submissiondate=row['submissiondate'])
 
     names_list.append(full_name)
 
@@ -120,7 +120,7 @@ def create_list_names_based_on_many_columns(df, columns):
   df_with_names = df[df[fn_c]!='']
 
   for index, row in df_with_names.iterrows():
-    full_name = FullName(first_name = row[fn_c], middle_name = row[mn_c], surname= row[ln_c], second_surname = row[sln_c], case_id_who_reffered = row['caseid'], submissiondate=row['submissiondate'])
+    full_name = FullName(first_name = row[fn_c], middle_name = row[mn_c], surname= row[ln_c], second_surname = row[sln_c], case_id_who_reffered = row['current_resp_key'], submissiondate=row['submissiondate'])
 
     names_list.append(full_name)
 
@@ -226,7 +226,7 @@ def search_duplicates(dataset_path, output_path='.'):
   #Create an output database of matches_results
   matches_df = pd.DataFrame()
   matches_df = matches_df.append(matches_results)
-  matches_df.columns=['Nombre Referido', 'Metaphone Referido', 'Referido en case id', 'Fecha referido:', 'Match?', 'Nombre Match', 'Methaphone_match','Match encuestada o hh memb.', 'Match caseid', 'Submissiondate match', 'Match posterior a referral?']
+  matches_df.columns=['Nombre Referido', 'Metaphone Referido', 'Referido en current_resp_key', 'Fecha referido:', 'Match?', 'Nombre Match', 'Methaphone_match','Match encuestada o hh memb.', 'Match current_resp_key', 'Submissiondate match', 'Match posterior a referral?']
 
   # matches_df.to_csv('duplicates.csv', index=False)
   # print(matches_df)
