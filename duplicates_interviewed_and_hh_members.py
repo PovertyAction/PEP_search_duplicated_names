@@ -1,7 +1,13 @@
 import pandas as pd
-from metaphone import doublemetaphone
 import sys
 import os
+
+from metaphone import doublemetaphone as doublemetaphone_native
+#We are replacing all y for j before calling doublemetaphone_native
+#This is because Yirinka and Jirinka are giving different resaults
+def doublemetaphone(word):
+    word = word.replace('y', 'j').replace('Y', 'j')
+    return doublemetaphone_native(word)
 
 def search_duplicates(dataset_path, output_directory = '.'):
   '''

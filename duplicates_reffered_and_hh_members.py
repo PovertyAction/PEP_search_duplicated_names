@@ -1,8 +1,15 @@
 import pandas as pd
 import numpy as np
-from metaphone import doublemetaphone
 import os
 import sys
+
+from metaphone import doublemetaphone as doublemetaphone_native
+#We are replacing all y for j before calling doublemetaphone_native
+#This is because Yirinka and Jirinka are giving different resaults
+def doublemetaphone(word):
+    word = word.replace('y', 'j').replace('Y', 'j')
+    return doublemetaphone_native(word)
+
 
 class FullName:
   def __init__(self, first_name=None, middle_name=None, surname=None, second_surname=None, fullname=None, case_id = None, surveyed_or_hm = None, case_id_who_reffered=None, submissiondate=None):
@@ -88,7 +95,9 @@ def create_list_names_based_on_one_column(df, fullname_column):
   #Remove columns with no fullname
   df = df[df[fullname_column]!='']
 
+  # print(df.shape)
   for index, row in df.iterrows():
+    # print(index)
     if(fullname_column == 'full_name'):
       surveyed_or_hm = 'Encuestada'
     else:
@@ -127,6 +136,7 @@ def get_existing_names_in_db(df, source_columns):
 
   all_names = []
   for source_column in source_columns:
+    # print(source_column)
 
     names_to_add = create_list_names_based_on_one_column(df, source_column)
 
@@ -158,9 +168,9 @@ def search_duplicates(dataset_path, output_path='.'):
   #Load dataset
   df = pd.read_stata(dataset_path)
 
-  #Filter df to only those with final_status=1 and collection_wave piloto2
+  #Filter df to only those with final_status=1 and collection_wave campo
   df = df[df['final_status']=='1']
-  df = df[df['collection_wave']=='piloto2']
+  df = df[df['collection_wave']=='campo']
   df.reset_index(inplace=True)
 
   #GET NAMES ALREADY EXISTING IN DATABASE
@@ -168,15 +178,20 @@ def search_duplicates(dataset_path, output_path='.'):
   #Select colums where we capture names already in database
   #We capture for sure from 'full_name' column.
   #We also consider members of hh.
+
+
   max_n_hh_memb = int(df['hh_members'].max())
+  print(max_n_hh_memb)
   source_columns = ['full_name']
   for i in range(1,max_n_hh_memb+1):
     col_name_member_i = 'name_'+str(i)
     source_columns.append(col_name_member_i)
 
+
+  print('a')
   #Create list of names in source_columns
   existing_names = get_existing_names_in_db(df, source_columns)
-
+  print('b')
 
   #GET NAMES THAT WE WANT TO CHECK IF THEY ALREADY EXIST IN DATABASE
 
@@ -185,6 +200,8 @@ def search_duplicates(dataset_path, output_path='.'):
 
   #Create list of names in columns_to_check
   all_names_to_check = get_names_to_check(df, columns_to_check_list)
+  print('c')
+
 
   #FIND INTERSECTION BETWEEN TWO GROUPS OF NAMES
 

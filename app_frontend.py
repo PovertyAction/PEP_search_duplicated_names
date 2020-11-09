@@ -8,7 +8,8 @@ import duplicates_reffered_and_hh_members
 import duplicates_interviewed_and_hh_members
 from tkinter import messagebox
 
-app_title = "PEP: Findind names duplicates - v0.3"
+app_version = '0.4'
+app_title = "PEP: Findind names duplicates - "+app_version
 intro_text = "This app checks duplicates names in a given dataset"
 
 #Dataset we are working with
