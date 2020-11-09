@@ -196,7 +196,18 @@ def search_duplicates(dataset_path, output_path='.'):
   #GET NAMES THAT WE WANT TO CHECK IF THEY ALREADY EXIST IN DATABASE
 
   #Select columns with names we would like to check if they already exist in database
-  columns_to_check_list = [['rds6_name1_1','rds6_name2_1','rds6_lastname1_1', 'rds6_lastname2_1', 'rds6_gender_1'],['rds6_name1_2','rds6_name2_2','rds6_lastname1_2', 'rds6_lastname2_2', 'rds6_gender_2'],['rds6_name1_3','rds6_name2_3','rds6_lastname1_3', 'rds6_lastname2_3', 'rds6_gender_3']]
+  columns_to_check_list = []
+  for i in range(1,11): #Up to 10 refferals
+    columns_for_refferal_i = [  'rds6_name1_'+str(i),
+                                'rds6_name2_'+str(i),
+                                'rds6_lastname1_'+str(i),
+                                'rds6_lastname2_'+str(i),
+                                'rds6_gender_'+str(i)]
+    columns_to_check_list.append(columns_for_refferal_i)
+
+
+
+
 
   #Create list of names in columns_to_check
   all_names_to_check = get_names_to_check(df, columns_to_check_list)
